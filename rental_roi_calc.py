@@ -5,28 +5,29 @@ import numpy
 #Calculate Rental ROI
 
 ##Inputs
-house_cost=240000 #total cost: land + house
+house_cost=233000 #total cost: land + house
 depreciable_value=0.7 #% of house_cost that is the house
-monthly_rent=1400
+monthly_rent=1700
 analysis_for_n_years=10
-rent_increase_rate=0.04
-house_appreciation_rate=0.04
-mortgage_rate=0.042
+rent_increase_rate=0.06
+house_appreciation_rate=0.06
+mortgage_rate=0.02625
 mortgage_duration=15
-down_payment=0.25
+down_payment=0.20
 
 
 ##Other rates that impact calculation. Need not be changed.
-property_tax_rate=0.023
+property_tax_rate=0.0235
 insurance_rate=0.01
-prop_management_rate = 0.1 #% of rent
+prop_management_rate = 0.08 #% of rent
+one_time_lease_cost_per_year=1000
 yearly_maintenance=2000
 months_vacant=1
-closing_fees=0.00
+closing_fees=2000
 selling_costs=0.04 #% of house cost
 yearly_trip=250
 one_time_fixup_before_selling=20000
-hoa_per_month=40
+hoa_per_month=30
 
 
 
@@ -51,6 +52,7 @@ for year in range(1, analysis_for_n_years+1):
 
     ####################### Calculate Cash Out and Tax Deductible ######################################
     cash_out=0
+
     tax_deductible_expenses=0
 
     ###### Mortgage Payments ####
@@ -59,7 +61,7 @@ for year in range(1, analysis_for_n_years+1):
     if loan_principal_balance > 0:
         for month in range(1,12):
             #Calculate monthly payment, new principal, principal component and interest component
-            monthly_mortgage_payment=(1-down_payment)*loan_principal_balance * (mortgage_rate/12)*math.pow(1+mortgage_rate/12, mortgage_duration*12) / (math.pow(1+mortgage_rate/12, mortgage_duration*12) - 1)
+            monthly_mortgage_payment=loan_principal_balance * (mortgage_rate/12)*math.pow(1+mortgage_rate/12, mortgage_duration*12) / (math.pow(1+mortgage_rate/12, mortgage_duration*12) - 1)
             new_loan_principal_balance = loan_principal_balance*(math.pow(1+mortgage_rate/12, mortgage_duration*12) - (1+mortgage_rate/12))/(math.pow(1+mortgage_rate/12, mortgage_duration*12) - 1)
             yearly_mortgage_payment+=monthly_mortgage_payment
             principal_component=loan_principal_balance-new_loan_principal_balance
@@ -71,6 +73,7 @@ for year in range(1, analysis_for_n_years+1):
             #add mortgage payment to cash_out and interest_component to tax_deductible_expense
             cash_out+=principal_component+interest_component
             #cash_out+=interest_component
+
             tax_deductible_expenses+=interest_component
 
 
@@ -109,10 +112,10 @@ for year in range(1, analysis_for_n_years+1):
     ### Determine cash flow and tax impact per year
     net_cash_flow=cash_in-cash_out
     if year==1:
-        net_cash_flow-=down_payment*house_cost
+        net_cash_flow-=down_payment*house_cost + closing_fees
     net_cash_flow_arr.append(net_cash_flow)
     tax_impact=cash_in-tax_deductible_expenses
-    print "Year " + str(year) + "-> Net Cash Flow:" + str(net_cash_flow)
+    print "Year " + str(year) + "-> Net Cash Flow:" + str(net_cash_flow) + ", Tax Impact: " + str(tax_impact)
 
     ### Add to net earning over analysis years
     #If tax impact > 0, we made money. Add to net_earnings after deducting 33% tax
@@ -143,89 +146,6 @@ print "Earnings after " + str(analysis_for_n_years) + " years -> " + "Total: " +
     ", From yearly rent - expenses: " + str(net_earnings_over_analysis_years_from_rent_after_tax) + ", Selling house: " + str(gain_from_selling_house_after_tax)
 print "Total Money spent on house: " + str(total_money_spent_on_house)
 print "Simple ROI per year (after tax): " + str(roi)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#yearly_mortgage_payment= 12*(1-down_payment)*house_cost * (mortgage_rate/12)*math.pow(1+mortgage_rate/12, mortgage_duration*12) / (math.pow(1+mortgage_rate/12, mortgage_duration*12) - 1)
-#total_mortgage_due=yearly_mortgage_payment*mortgage_duration
-
-# depreciated_house_value=depreciable_value*house_cost #for prop tax
-# investment=0
-# mortgage_paid=0
-# income=0
-
-#
-# for year in range(1,analysis_for_n_years+1):
-#     cash_out=0
-#     cash_in=0
-#
-#     #calculate mortgage payments
-#
-#
-#     yearly_rent = monthly_rent*12
-#     cash_in += yearly_rent
-#
-#     if year == 1:
-#         cash_out += down_payment*house_cost
-#         cash_out += closing_fees*house_cost
-#
-#     cash_out += depreciated_house_value*property_tax_rate
-#     cash_out += insurance_rate*house_cost
-#     cash_out += prop_management_rate*yearly_rent
-#     cash_out += yearly_maintenance
-#     cash_out += months_vacant*yearly_rent/12
-#     cash_out += yearly_trip
-#     cash_out += hoa_per_month*12
-#
-#     #mortage paid so far
-#     if mortgage_paid <= total_mortgage_due:
-#         mortgage_paid+=yearly_mortgage_payment
-#         cash_out += yearly_mortgage_payment
-#
-#
-#     #Update house price based on appreciation rate, depreciated house value for prop tax and rent increase
-#     appreciated_house_value = appreciated_house_value*(1+house_appreciation_rate)
-#     depreciated_house_value = depreciated_house_value*(1-depreciation_rate)
-#     monthly_rent=monthly_rent*(1+rent_increase_rate)
-#
-#     print "Net cash flow for year " + str(year) + " is: " + str(cash_in-cash_out)
-#     if cash_out - cash_in >= 0:
-#         investment+= cash_out - cash_in
-#     else:
-#         income += -cash_out + cash_in
-#
-#
-#     mortgage_remaining=total_mortgage_due-mortgage_paid
-# # if mortgage_remaining <= 0:
-# #     mortgage_remaining = 0
-# investment_return = income + appreciated_house_value*(1-selling_costs) - mortgage_remaining - investment - one_time_fixup_before_selling
-# return_on_investment=(investment_return*100/investment)/analysis_for_n_years
-# investment_per_year=(investment-income)/analysis_for_n_years
-#
-# print "Mortgage per month is: " + str(yearly_mortgage_payment/12)
-# print "Investment per year is: " + str(investment_per_year)
-# print "Investment return is: " + str(return_on_investment)
-
-
-
-
-
-
-
 
 
 
